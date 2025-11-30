@@ -96,6 +96,24 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('templates/category/{category}', [\App\Http\Controllers\Api\Reports\ReportTemplateController::class, 'getByCategory']);
     });
     
+    // Library Management
+    Route::prefix('library')->group(function () {
+        Route::get('books', [\App\Http\Controllers\Api\Library\LibraryController::class, 'getBooks']);
+        Route::post('issue', [\App\Http\Controllers\Api\Library\LibraryController::class, 'issueBook']);
+        Route::post('return', [\App\Http\Controllers\Api\Library\LibraryController::class, 'returnBook']);
+        Route::get('student/{studentId}/issues', [\App\Http\Controllers\Api\Library\LibraryController::class, 'getStudentIssues']);
+        Route::get('overdue', [\App\Http\Controllers\Api\Library\LibraryController::class, 'getOverdueBooks']);
+    });
+    
+    // HR & Payroll Management
+    Route::prefix('hr')->group(function () {
+        Route::get('staff', [\App\Http\Controllers\Api\HR\HRController::class, 'getStaff']);
+        Route::post('salaries/generate', [\App\Http\Controllers\Api\HR\HRController::class, 'generateSalaries']);
+        Route::post('salaries/process-payment', [\App\Http\Controllers\Api\HR\HRController::class, 'processSalaryPayment']);
+        Route::get('salaries/report', [\App\Http\Controllers\Api\HR\HRController::class, 'getSalaryReport']);
+        Route::get('salary-structures', [\App\Http\Controllers\Api\HR\HRController::class, 'getSalaryStructures']);
+    });
+    
 });
 
 // Webhook Routes (no authentication)
