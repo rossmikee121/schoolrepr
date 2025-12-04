@@ -1,25 +1,43 @@
-name: Deploy to Hostinger
+name: Deploy to Production
 
 on:
   push:
     branches: [ main ]
+  workflow_dispatch:
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    if: github.repository_owner == 'rossmikee121'
     
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     
-    - name: Deploy to Hostinger
-      uses: appleboy/ssh-action@v0.1.5
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
       with:
-        host: ${{ secrets.HOSTINGER_HOST }}
-        username: ${{ secrets.HOSTINGER_USERNAME }}
-        key: ${{ secrets.HOSTINGER_SSH_KEY }}
+        php-version: '8.1'
+        extensions: mbstring, xml, ctype, iconv, intl, pdo_sqlite, pdo_mysql, pdo_pgsql
+        
+    - name: Install Dependencies
+      run: |
+        cd schoolerp
+        composer install --no-dev --optimize-autoloader --no-interaction
+        
+    - name: Create deployment package
+      run: |
+        tar -czf schoolerp-deploy.tar.gz schoolerp/ student-portal/ README.md INTERN_GUIDE.md
+        
+    - name: Deploy via SSH (if secrets configured)
+      if: ${{ secrets.DEPLOY_HOST != '' }}
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.DEPLOY_HOST }}
+        username: ${{ secrets.DEPLOY_USER }}
+        key: ${{ secrets.DEPLOY_KEY }}
         script: |
-          cd /public_html/schoolerp
-          git pull origin main
+          cd ${{ secrets.DEPLOY_PATH || '/var/www/html' }}
+          git pull origin main || echo "Manual deployment required"
           cd schoolerp
           composer install --no-dev --optimize-autoloader
           php artisan config:cache
